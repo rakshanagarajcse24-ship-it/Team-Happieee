@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KEYSTONE | Maze Intelligence Lab</title>
+<style>
+:root{--bg:#080d18;--panel:#111a2b;--border:#293853;--text:#eef4ff;--muted:#92a3bf;--cyan:#55e6ff;--green:#5df2b0;--red:#ff6f87;--gold:#ffd166}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top left,#162743,transparent 45%),var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif}
+header{padding:23px 4%;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:45px;height:45px;display:grid;place-items:center;background:#12283c;border:1px solid #397c99;border-radius:12px;color:var(--cyan);font-size:25px}
+h1{font-size:25px;letter-spacing:2px;margin:0 0 5px}
+.sub{font-size:11px;color:var(--muted);letter-spacing:1.3px}
+.status{color:var(--green);font-size:12px;border:1px solid #285844;padding:9px 12px;border-radius:30px}
+main{max-width:1450px;margin:auto;padding:25px 3%}
+.intro{margin-bottom:22px}
+.intro h2{font-size:21px;margin:0 0 8px}
+.intro p{font-size:14px;color:var(--muted);line-height:1.6;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(270px,.8fr);gap:18px;align-items:start}
+.panel{background:linear-gradient(145deg,#121d30,#0d1524);border:1px solid var(--border);border-radius:15px;overflow:hidden;min-width:0}
+.panel-head{padding:17px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.panel-head h2{font-size:13px;letter-spacing:1px;margin:0}
+.tag{font-size:11px;color:var(--cyan);background:#12283a;padding:6px 9px;border-radius:7px}
+.panel-body{padding:17px}
+.canvas-wrap{display:grid;place-items:center;background:#09111e;border:1px solid #263750;border-radius:10px;padding:7px}
+canvas{width:100%;height:auto;display:block;max-width:720px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:15px 0 5px}
+.legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.swatch{width:11px;height:11px;border-radius:3px;display:inline-block}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:15px}
+.metric{background:#0e1727;border:1px solid var(--border);border-radius:10px;padding:12px;min-width:0}
+.metric-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:9px}
+.metric-value{font-size:clamp(16px,2vw,22px);font-weight:700;overflow-wrap:anywhere}
+.metric small{display:block;color:var(--muted);font-size:10px;margin-top:5px}
+.track{height:7px;background:#25334a;border-radius:10px;overflow:hidden;margin-top:14px}
+.bar{height:100%;width:0;background:linear-gradient(90deg,#25b5db,#67f0bb);transition:width 0.1s ease}
+.range-label{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:8px}
+.section{margin-bottom:22px}.section:last-child{margin-bottom:0}
+.section h3{font-size:12px;letter-spacing:1px;margin:0 0 12px}
+button,select,input{font:inherit}
+button{background:#1a2840;border:1px solid #34445e;color:var(--text);border-radius:8px;padding:11px 10px;cursor:pointer;font-size:12px;font-weight:600}
+button:hover{background:#263957;border-color:var(--cyan)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:#087d96;border-color:#22b8d0}
+button.success{background:#174a3b;border-color:#328b6d}
+.grid-buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.full{width:100%}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}
+select,input[type=number]{width:100%;background:#0a1322;color:var(--text);border:1px solid #34445e;padding:11px;border-radius:8px}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.speed-label{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
+.inventory{display:flex;gap:7px;flex-wrap:wrap}
+.chip{font-size:11px;padding:7px 9px;border:1px solid #63572f;background:#302a1a;color:var(--gold);border-radius:7px}
+.chip.empty{border-color:var(--border);background:#101a2b;color:var(--muted)}
+.message{padding:12px;border:1px solid var(--border);border-radius:9px;background:#0b1422;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.message.good{border-color:#28684f;color:#9df3cb}
+.message.bad{border-color:#74404e;color:#ff9eae}
+footer{text-align:center;padding:22px;color:#7386a5;font-size:11px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.panel-body{padding:11px}.grid-buttons{grid-template-columns:1fr}.metrics{gap:6px}.metric{padding:9px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">⌘</div>
+    <div><h1>KEYSTONE</h1><div class="sub">MAZE INTELLIGENCE LAB · BFS PATHFINDING</div></div>
+  </div>
+  <div class="status">● SYSTEM READY</div>
+</header>
+
+<main>
+  <div class="intro">
+    <h2>Maze with Keys &amp; Doors</h2>
+    <p>Find the shortest valid route using Breadth-First Search. Collect keys, unlock matching doors and watch the algorithm explore the maze.</p>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-head"><h2>01 / MAZE VISUALIZATION</h2><span class="tag" id="mazeSize">21 × 21 GRID</span></div>
+      <div class="panel-body">
+        <div class="canvas-wrap"><canvas id="mazeCanvas" width="630" height="630"></canvas></div>
+        <div class="legend">
+          <span><i class="swatch" style="background:#111c30"></i>Wall</span>
+          <span><i class="swatch" style="background:#e9f4ff"></i>Path</span>
+          <span><i class="swatch" style="background:#40e3a2"></i>Start</span>
+          <span><i class="swatch" style="background:#ff657e"></i>Exit</span>
+          <span><i class="swatch" style="background:#ffd166"></i>Key</span>
+          <span><i class="swatch" style="background:#c28bff"></i>Door</span>
+          <span><i class="swatch" style="background:#39c9ef"></i>Route</span>
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Path length</div><div class="metric-value" id="pathLength">—</div><small>Moves to exit</small></div>
+          <div class="metric"><div class="metric-label">States explored</div><div class="metric-value" id="states">0</div><small>BFS states</small></div>
+          <div class="metric"><div class="metric-label">Keys collected</div><div class="metric-value" id="keyCount">0 / 0</div><small>Inventory</small></div>
+          <div class="metric"><div class="metric-label">Solver time</div><div class="metric-value" id="solveTime">—</div><small>Milliseconds</small></div>
+        </div>
+        <div class="track"><div class="bar" id="progress"></div></div>
+        <div class="range-label"><span id="stepLabel">Ready to solve</span><span id="percent">0%</span></div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel-head"><h2>02 / CONTROL CENTER</h2><span class="tag">CONTROLS</span></div>
+      <div class="panel-body">
+        <div class="section">
+          <h3>PATHFINDING</h3>
+          <div class="grid-buttons">
+            <button class="primary" id="runBtn">▶ Run Animation</button>
+            <button class="success" id="pathBtn">✦ Show Optimal Path</button>
+            <button id="stepBtn">→ Step Forward</button>
+            <button id="resetBtn">↺ Reset View</button>
+          </div>
+        </div>
+        <div class="section">
+          <h3>MAZE GENERATOR</h3>
+          <label for="sizeSelect">Maze dimensions</label>
+          <select id="sizeSelect">
+            <option value="11">11 × 11 — Small</option>
+            <option value="15">15 × 15 — Medium</option>
+            <option value="21" selected>21 × 21 — Standard</option>
+            <option value="31">31 × 31 — Large</option>
+          </select>
+          <br><br>
+          <button class="full" id="generateBtn">⟳ Generate New Maze</button>
+        </div>
+        <div class="section">
+          <h3>ANIMATION SPEED</h3>
+          <input type="range" id="speed" min="1" max="10" value="6">
+          <div class="speed-label"><span>Slow</span><span id="speedText">6</span><span>Fast</span></div>
+        </div>
+        <div class="section">
+          <h3>KEY INVENTORY</h3>
+          <div class="inventory" id="inventory"><span class="chip empty">No keys collected</span></div>
+        </div>
+        <div class="section">
+          <h3>SYSTEM MESSAGE</h3>
+          <div class="message" id="message" role="status" aria-live="polite">Maze ready. Choose a pathfinding action.</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+<footer>KEYSTONE MAZE INTELLIGENCE LAB · BREADTH-FIRST SEARCH + KEY MASKS</footer>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const canvas = $("mazeCanvas");
+const ctx = canvas.getContext("2d");
+
+/*
+  Tile markers:
+    "#"      wall
+    "."      floor
+    "S"      start
+    "X"      exit  (NOT "E": "E" falls in the A-F door range)
+    "a"-"f"  keys
+    "A"-"F"  doors
+*/
+const isKey  = t => /^[a-f]$/.test(t);
+const isDoor = t => /^[A-F]$/.test(t);
+
+let N = 21;
+let grid = [];
+let start = {r:1, c:1};
+let end = {r:19, c:19};
+let path = [];
+let explored = 0;
+let solveMs = 0;
+let currentStep = 0;
+let currentMask = 0;
+let totalKeys = 0;
+let viewMode = "idle";
+let timer = null;
+
+const COLORS = {
+  wall:"#111c30", floor:"#e9f4ff", start:"#40e3a2",
+  end:"#ff657e", key:"#ffd166", door:"#c28bff",
+  route:"#39c9ef"
+};
+
+function message(text, type="") {
+  $("message").textContent = text;
+  $("message").className = "message" + (type ? " " + type : "");
+}
+
+function stopTimer() {
+  if (timer !== null) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function countKeys() {
+  let n = 0;
+  for (const row of grid) for (const ch of row) {
+    if (isKey(ch)) n++;
+  }
+  return n;
+}
+
+function bfs() {
+  const begin = performance.now();
+  const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
+  const encode = (r, c, m) => r + "," + c + "," + m;
+  const queue = [];
+  const seen = new Set();
+  const parent = new Map();
+
+  let initialMask = 0;
+  const startTile = grid[start.r][start.c];
+  if (isKey(startTile)) {
+    initialMask |= 1 << (startTile.charCodeAt(0) - 97);
+  }
+
+  const first = {r: start.r, c: start.c, mask: initialMask};
+  first.id = encode(first.r, first.c, first.mask);
+  queue.push(first);
+  seen.add(first.id);
+
+  let head = 0, goal = null;
+
+  while (head < queue.length) {
+    const cur = queue[head++];
+
+    if (cur.r === end.r && cur.c === end.c) {
+      goal = cur;
+      break;
+    }
+
+    for (const [dr, dc] of dirs) {
+      const r = cur.r + dr, c = cur.c + dc;
+      if (r < 0 || r >= N || c < 0 || c >= N) continue;
+
+      const tile = grid[r][c];
+      if (tile === "#") continue;
+
+      let nextMask = cur.mask;
+
+      if (isKey(tile)) {
+        nextMask |= 1 << (tile.charCodeAt(0) - 97);
+      }
+
+      if (isDoor(tile)) {
+        const requiredBit = 1 << (tile.toLowerCase().charCodeAt(0) - 97);
+        if ((cur.mask & requiredBit) === 0) continue;
+      }
+
+      const id = encode(r, c, nextMask);
+      if (seen.has(id)) continue;
+
+      const next = {r, c, mask: nextMask, id};
+      seen.add(id);
+      parent.set(id, cur.id);
+      queue.push(next);
+    }
+  }
+
+  const duration = performance.now() - begin;
+  if (!goal) return {found: false, path: [], explored: seen.size, duration};
+
+  const result = [];
+  let id = goal.id;
+
+  while (id) {
+    const [r, c, mask] = id.split(",").map(Number);
+    result.push({r, c, mask});
+    if (id === first.id) break;
+    id = parent.get(id);
+  }
+
+  result.reverse();
+  return {found: true, path: result, explored: seen.size, duration};
+}
+
+function drawMaze() {
+  if (!grid.length) return;
+
+  const cell = canvas.width / N;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const v = grid[r][c], x = c * cell, y = r * cell;
+      ctx.fillStyle = (v === "#") ? COLORS.wall : COLORS.floor;
+      ctx.fillRect(x, y, cell, cell);
+
+      if (v === "#") {
+        ctx.fillStyle = "#17253c";
+        ctx.fillRect(x + cell * .15, y + cell * .15, cell * .7, cell * .7);
+      } else if (isKey(v)) {
+        ctx.fillStyle = COLORS.key;
+        ctx.beginPath();
+        ctx.arc(x + cell / 2, y + cell / 2, cell * .3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#352a0b";
+        ctx.font = "bold " + Math.max(8, cell * .55) + "px Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(v, x + cell / 2, y + cell / 2);
+      } else if (isDoor(v)) {
+        const bit = 1 << (v.toLowerCase().charCodeAt(0) - 97);
+        ctx.fillStyle = (currentMask & bit) ? "#8bdcc1" : COLORS.door;
+        ctx.fillRect(x + cell * .18, y + cell * .12, cell * .64, cell * .76);
+        ctx.fillStyle = "#241b37";
+        ctx.font = "bold " + Math.max(8, cell * .48) + "px Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText((currentMask & bit) ? "✓" : v, x + cell / 2, y + cell / 2);
+      }
+
+      if (v === "S") {
+        ctx.fillStyle = COLORS.start;
+        ctx.beginPath(); ctx.arc(x + cell / 2, y + cell / 2, cell * .34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#09261d"; ctx.font = "bold " + Math.max(8, cell * .48) + "px Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("S", x + cell / 2, y + cell / 2);
+      }
+
+      if (v === "X") {
+        ctx.fillStyle = COLORS.end;
+        ctx.beginPath(); ctx.arc(x + cell / 2, y + cell / 2, cell * .34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3c1020"; ctx.font = "bold " + Math.max(8, cell * .48) + "px Arial";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("E", x + cell / 2, y + cell / 2);
+      }
+    }
+  }
+
+  if (path.length && viewMode !== "idle") {
+    const last = (viewMode === "path") ? path.length - 1 : currentStep;
+    ctx.strokeStyle = COLORS.route;
+    ctx.lineWidth = Math.max(2, cell * .18);
+    ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.beginPath();
+
+    for (let i = 0; i <= last && i < path.length; i++) {
+      const p = path[i], x = (p.c + .5) * cell, y = (p.r + .5) * cell;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    if (path[last]) {
+      const p = path[last];
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc((p.c + .5) * cell, (p.r + .5) * cell, cell * .22, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function updateInventory() {
+  const box = $("inventory");
+  box.replaceChildren();
+  let count = 0;
+
+  for (let i = 0; i < 6; i++) if (currentMask & (1 << i)) {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = "🔑 " + String.fromCharCode(65 + i) + " collected";
+    box.appendChild(chip);
+    count++;
+  }
+
+  if (!count) {
+    const empty = document.createElement("span");
+    empty.className = "chip empty";
+    empty.textContent = "No keys collected";
+    box.appendChild(empty);
+  }
+
+  $("keyCount").textContent = count + " / " + totalKeys;
+}
+
+function updateProgress() {
+  const maxSteps = Math.max(1, path.length - 1);
+  const pct = path.length ? Math.round((currentStep / maxSteps) * 100) : 0;
+  $("progress").style.width = pct + "%";
+  $("percent").textContent = pct + "%";
+  $("stepLabel").textContent = path.length ? "Step " + currentStep + " of " + maxSteps : "Ready to solve";
+}
+
+function updateDisplay() {
+  if (path.length && path[currentStep]) {
+    currentMask = path[currentStep].mask;
+  }
+  updateInventory();
+  updateProgress();
+  drawMaze();
+}
+
+function solveAndStore() {
+  stopTimer();
+  try {
+    const result = bfs();
+    path = result.path;
+    explored = result.explored;
+    solveMs = result.duration;
+
+    $("pathLength").textContent = path.length ? path.length - 1 : "—";
+    $("states").textContent = explored.toLocaleString();
+    $("solveTime").textContent = solveMs.toFixed(2) + " ms";
+
+    if (!result.found) {
+      message("No valid route found. Check walls, keys and doors.", "bad");
+      return false;
+    }
+    return true;
+  } catch (err) {
+    message("Solver error: " + err.message, "bad");
+    console.error(err);
+    return false;
+  }
+}
+
+function showPath() {
+  if (!solveAndStore()) return;
+  viewMode = "path";
+  currentStep = path.length - 1;
+  updateDisplay();
+  message("Shortest valid route found: " + (path.length - 1) + " moves. BFS explored " + explored + " states.", "good");
+}
+
+function runAnimation() {
+  if (!solveAndStore()) return;
+
+  if (path.length <= 1) {
+    viewMode = "path";
+    updateDisplay();
+    message("The exit is reached.", "good");
+    return;
+  }
+
+  viewMode = "walk";
+  currentStep = 0;
+  updateDisplay();
+  message("Animation running: following the shortest valid route.", "good");
+
+  const tick = () => {
+    if (currentStep >= path.length - 1) {
+      stopTimer();
+      viewMode = "path";
+      updateDisplay();
+      message("Maze solved in " + (path.length - 1) + " moves.", "good");
+      return;
+    }
+
+    currentStep++;
+    updateDisplay();
+
+    const p = path[currentStep];
+    const tile = grid[p.r][p.c];
+    if (isKey(tile)) message("Key " + tile.toUpperCase() + " collected.", "good");
+    else if (isDoor(tile)) message("Door " + tile + " unlocked.");
+  };
+
+  const delay = () => Math.max(10, 510 - Number($("speed").value) * 48);
+  timer = setInterval(tick, delay());
+}
+
+function stepForward() {
+  if (!path.length || viewMode === "idle" || viewMode === "path") {
+    if (!solveAndStore()) return;
+    viewMode = "walk";
+    currentStep = 0;
+  }
+
+  if (currentStep < path.length - 1) {
+    currentStep++;
+    updateDisplay();
+
+    if (currentStep === path.length - 1) {
+      viewMode = "path";
+      updateDisplay();
+      message("Exit reached. Shortest route completed.", "good");
+    } else {
+      message("Advanced to step " + currentStep + ".");
+    }
+  }
+}
+
+function resetView() {
+  stopTimer();
+  currentStep = 0;
+  currentMask = 0;
+  viewMode = "idle";
+  updateDisplay();
+  message("View reset. Select a pathfinding action.");
+}
+
+function generateMaze(size) {
+  stopTimer();
+  N = size;
+  grid = Array.from({length: N}, () => Array(N).fill("#"));
+
+  const stack = [{r:1, c:1}];
+  grid[1][1] = ".";
+  const dirs = [[-2,0], [2,0], [0,-2], [0,2]];
+
+  while (stack.length) {
+    const cur = stack[stack.length - 1];
+    const choices = [];
+
+    for (const [dr, dc] of dirs) {
+      const r = cur.r + dr, c = cur.c + dc;
+      if (r > 0 && r < N - 1 && c > 0 && c < N - 1 && grid[r][c] === "#") {
+        choices.push({r, c, dr, dc});
+      }
+    }
+
+    if (!choices.length) {
+      stack.pop();
+      continue;
+    }
+
+    const next = choices[Math.floor(Math.random() * choices.length)];
+    grid[cur.r + next.dr / 2][cur.c + next.dc / 2] = ".";
+    grid[next.r][next.c] = ".";
+    stack.push({r: next.r, c: next.c});
+  }
+
+  start = {r: 1, c: 1};
+  end = {r: N - 2, c: N - 2};
+  grid[start.r][start.c] = "S";
+  grid[end.r][end.c] = "X";   // FIX: was "E", which the door check treated as Door E
+
+  const tempPath = bfs();
+  if (tempPath.found && tempPath.path.length > 8) {
+    const route = tempPath.path;
+    const keyPos = route[Math.floor(route.length * 0.3)];
+    const doorPos = route[Math.floor(route.length * 0.6)];
+
+    if (grid[keyPos.r][keyPos.c] === "." && grid[doorPos.r][doorPos.c] === ".") {
+      grid[keyPos.r][keyPos.c] = "a";
+      grid[doorPos.r][doorPos.c] = "A";
+    }
+  }
+
+  totalKeys = countKeys();
+  $("mazeSize").textContent = N + " × " + N + " GRID";
+  $("pathLength").textContent = "—";
+  $("states").textContent = "0";
+  $("solveTime").textContent = "—";
+  path = [];
+  explored = 0;
+  solveMs = 0;
+  currentStep = 0;
+  currentMask = 0;
+  viewMode = "idle";
+
+  updateDisplay();
+  message("New maze generated. Ready to solve.");
+}
+
+$("runBtn").addEventListener("click", runAnimation);
+$("pathBtn").addEventListener("click", showPath);
+$("stepBtn").addEventListener("click", stepForward);
+$("resetBtn").addEventListener("click", resetView);
+$("generateBtn").addEventListener("click", () => generateMaze(Number($("sizeSelect").value)));
+$("speed").addEventListener("input", () => $("speedText").textContent = $("speed").value);
+
+generateMaze(21);
+</script>
+</body>
+</html>
