@@ -1,0 +1,17 @@
+Sample console input for Option 1:
+5 7
+2 1
+1 2 500
+1 3 700
+2 3 100
+2 4 300
+3 4 200
+3 5 250
+4 5 100
+
+Expected minimum cost: 500
+One optimal route: 1 -> 2 -> 4 -> 5, using the coupon on flight 1 -> 2.
+
+For Option 2, select option 2, enter sample_flights.csv, then enter:
+5
+2 1
